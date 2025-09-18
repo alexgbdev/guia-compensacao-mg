@@ -1,0 +1,160 @@
+/* Estilo Final e Exclusivo para a Ferramenta Principal */
+body {
+  font-family: sans-serif;
+  background-color: #f4f4f4;
+  color: #333;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1000px; /* Aumentado para melhor acomodar as colunas */
+  margin: auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  text-align: center;
+  color: #444;
+  margin-bottom: 30px;
+}
+
+/* O container flex para criar as duas colunas */
+.tool-layout-wrapper {
+  display: flex;
+  gap: 30px; /* Espaço entre as colunas */
+}
+
+.left-column {
+  flex: 1; /* Ocupa 1 parte do espaço */
+}
+
+.right-column {
+  flex: 1.5; /* Ocupa 1.5 partes do espaço, sendo maior */
+  border-left: 1px solid #e0e0e0;
+  padding-left: 30px;
+}
+
+/* ===================================================================== */
+/* ALTERAÇÃO 1: Adicionado #normas-relacionadas para espaçamento correto */
+/* ===================================================================== */
+.form-group,
+#resultado,
+#normas-relacionadas {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.lista-item-modalidade {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden; /* Para o border-radius funcionar bem */
+}
+
+.lista-item-modalidade li {
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
+  cursor: pointer;
+  background-color: #fff;
+  transition: background-color 0.2s;
+}
+
+.lista-item-modalidade li:last-child {
+  border-bottom: none;
+}
+
+.lista-item-modalidade li:hover {
+  background-color: #f5f5f5;
+}
+
+.lista-item-modalidade li.active {
+  background-color: #e9f5ff; /* Fundo azul claro */
+  font-weight: bold;
+  color: #0056b3;
+  border-left: 4px solid #007bff; /* Borda de destaque à esquerda */
+  padding-left: 8px; /* Ajusta o padding para a borda */
+}
+
+#detalhes-modalidade {
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 5px;
+}
+
+/* Deixamos o estilo da caixa de normas separado para maior controle */
+#normas-relacionadas {
+  background-color: #f7f9fc;
+  padding: 20px;
+  border-radius: 5px;
+  border: 1px solid #e0e6f0;
+}
+
+#detalhes-modalidade strong {
+  display: block;
+  margin-top: 15px;
+  margin-bottom: 5px;
+  color: #0056b3;
+  font-size: 1.1em;
+}
+
+/* ===================================================================== */
+/* ALTERAÇÃO 2: Refinamento visual da lista de normas (legibilidade)   */
+/* ===================================================================== */
+#normas-relacionadas ul {
+  list-style: none;
+  padding: 0;
+  margin: 0; /* Remove margens do <ul> */
+}
+
+#normas-relacionadas li {
+  margin-bottom: 10px; /* Adiciona espaço entre cada norma */
+}
+#normas-relacionadas li:last-child {
+  margin-bottom: 0; /* Remove espaço do último item */
+}
+
+#normas-relacionadas a {
+  text-decoration: none;
+  color: #007bff;
+  font-weight: bold;
+  line-height: 1.4; /* Melhora a legibilidade de links longos */
+  transition: color 0.2s ease-in-out;
+}
+
+#normas-relacionadas a:hover {
+  color: #0056b3; /* Escurece o link ao passar o mouse */
+  text-decoration: underline;
+}
+
+/* Responsividade: em telas pequenas, as colunas ficam uma sobre a outra */
+@media (max-width: 768px) {
+  .tool-layout-wrapper {
+    flex-direction: column;
+    gap: 0;
+  }
+  .right-column {
+    border-left: none;
+    padding-left: 0;
+    margin-top: 30px;
+    border-top: 1px solid #e0e0e0;
+    padding-top: 30px;
+  }
+}

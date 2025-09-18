@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Painel Administrativo - Guia de Compensação</title>
+    <link rel="stylesheet" href="css/admin.css" />
+  </head>
+  <body class="admin-page">
+    <div class="container admin-container">
+      <h1>Painel Administrativo</h1>
+      <a href="/" class="admin-back-link">Voltar para a Ferramenta</a>
+
+      <!-- Seção de Normas -->
+      <details open>
+        <summary><h2>Gerenciar Normas</h2></summary>
+        <div class="admin-section">
+          <form id="norma-form" class="admin-form">
+            <h3>Cadastrar Nova Norma</h3>
+            <input
+              type="text"
+              id="norma-nome"
+              placeholder="Nome da Norma"
+              required
+            />
+            <input type="text" id="norma-link" placeholder="Link (URL)" />
+            <textarea
+              id="norma-preambulo"
+              placeholder="Preâmbulo / Descrição"
+            ></textarea>
+            <button type="submit">Salvar Norma</button>
+          </form>
+          <div class="admin-list-container">
+            <h3>Normas Cadastradas</h3>
+            <ul id="normas-list" class="admin-list">
+              <li>Carregando...</li>
+            </ul>
+          </div>
+        </div>
+      </details>
+
+      <!-- Seção de Tipos de Compensação -->
+      <details>
+        <summary><h2>Gerenciar Tipos de Compensação</h2></summary>
+        <div class="admin-section">
+          <form id="tipo-form" class="admin-form">
+            <h3>Cadastrar Novo Tipo</h3>
+            <input
+              type="text"
+              id="tipo-nome"
+              placeholder="Nome do Tipo de Compensação"
+              required
+            />
+            <div id="tipo-normas-checkboxes" class="checkbox-container">
+              <label>Vincular Normas:</label>
+              <!-- Checkboxes de normas serão inseridos aqui pelo JS -->
+            </div>
+            <button type="submit">Salvar Tipo</button>
+          </form>
+          <div class="admin-list-container">
+            <h3>Tipos Cadastrados</h3>
+            <ul id="tipos-list" class="admin-list">
+              <li>Carregando...</li>
+            </ul>
+          </div>
+        </div>
+      </details>
+
+      <!-- Seção de Modalidades -->
+      <details>
+        <summary><h2>Gerenciar Modalidades</h2></summary>
+        <div class="admin-section">
+          <form id="modalidade-form" class="admin-form">
+            <h3>Cadastrar Nova Modalidade</h3>
+            <select id="modalidade-tipo-select" required>
+              <option value="">-- Selecione o Tipo de Compensação --</option>
+              <!-- Opções de tipo serão inseridas aqui pelo JS -->
+            </select>
+            <input
+              type="text"
+              id="modalidade-nome"
+              placeholder="Nome da Modalidade"
+              required
+            />
+            <input
+              type="text"
+              id="modalidade-proporcao"
+              placeholder="Proporção (Ex: 1:1)"
+            />
+            <input
+              type="text"
+              id="modalidade-forma"
+              placeholder="Forma (Ex: Doação)"
+            />
+            <textarea
+              id="modalidade-especificidades"
+              placeholder="Especificidades da Área"
+            ></textarea>
+            <textarea
+              id="modalidade-vantagens"
+              placeholder="Vantagens"
+            ></textarea>
+            <textarea
+              id="modalidade-desvantagens"
+              placeholder="Desvantagens"
+            ></textarea>
+            <textarea
+              id="modalidade-observacao"
+              placeholder="Observações"
+            ></textarea>
+            <textarea
+              id="modalidade-documentos"
+              placeholder="Documentos Necessários"
+            ></textarea>
+            <button type="submit">Salvar Modalidade</button>
+          </form>
+          <div class="admin-list-container">
+            <h3>Modalidades Cadastradas</h3>
+            <ul id="modalidades-list" class="admin-list">
+              <li>Carregando...</li>
+            </ul>
+          </div>
+        </div>
+      </details>
+    </div>
+    <script src="admin.js"></script>
+  </body>
+</html>

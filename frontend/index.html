@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guia de Compensação Ambiental MG</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Guia de Modalidades de Compensação Ambiental - MG</h1>
+      <div class="tool-layout-wrapper">
+        <!-- ======================= COLUNA DA ESQUERDA (MODIFICADA) ======================= -->
+        <div class="left-column">
+          <div class="form-group">
+            <label for="tipo-compensacao">
+              Selecione o Tipo de Compensação:
+            </label>
+            <select id="tipo-compensacao">
+              <option value="">-- Carregando... --</option>
+            </select>
+          </div>
+          <div id="resultado">
+            <h4>Modalidades Disponíveis:</h4>
+            <ul id="lista-modalidades" class="lista-item-modalidade"></ul>
+          </div>
+
+          <!-- Bloco de Normas Movido Para Cá -->
+          <div id="normas-relacionadas" style="display: none">
+            <h4>Normas Relacionadas:</h4>
+            <ul></ul>
+          </div>
+        </div>
+
+        <!-- ======================= COLUNA DA DIREITA (MODIFICADA) ======================= -->
+        <div class="right-column">
+          <div id="detalhes-modalidade" style="display: none"></div>
+          <div
+            id="siscal-btn-container"
+            style="display: none; margin-top: 16px"
+          ></div>
+        </div>
+      </div>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>

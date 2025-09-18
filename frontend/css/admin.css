@@ -1,0 +1,187 @@
+/* Estilo Exclusivo para o Painel Administrativo */
+:root {
+  --cor-primaria: #007bff;
+  --cor-fundo: #f4f7f6;
+  --cor-container: #ffffff;
+  --cor-texto: #333;
+  --cor-borda: #dee2e6;
+  --cor-sucesso: #28a745;
+  --cor-perigo: #dc3545;
+  --cor-secundaria: #6c757d;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--cor-fundo);
+  color: var(--cor-texto);
+  margin: 0;
+  padding: 20px;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: var(--cor-container);
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+h1 {
+  color: var(--cor-primaria);
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.admin-back-link {
+  display: inline-block;
+  margin-bottom: 30px;
+  text-decoration: none;
+  font-weight: bold;
+  color: var(--cor-primaria);
+}
+
+details {
+  background: #fff;
+  border: 1px solid var(--cor-borda);
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+summary {
+  padding: 15px 20px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  outline: none;
+}
+
+.admin-section {
+  padding: 20px;
+  border-top: 1px solid var(--cor-borda);
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.admin-form {
+  flex: 1;
+  min-width: 300px;
+}
+.admin-list-container {
+  flex: 1.5;
+  min-width: 300px;
+}
+
+.admin-form h3,
+.admin-list-container h3 {
+  margin-top: 0;
+  color: var(--cor-secundaria);
+  border-bottom: 2px solid var(--cor-fundo);
+  padding-bottom: 10px;
+}
+
+.admin-form input[type="text"],
+.admin-form select,
+.admin-form textarea {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid var(--cor-borda);
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 1rem;
+}
+
+.admin-form input:focus,
+.admin-form textarea:focus {
+  outline: none;
+  border-color: var(--cor-primaria);
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.checkbox-container {
+  margin-bottom: 15px;
+  border: 1px solid var(--cor-borda);
+  padding: 15px;
+  border-radius: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+button[type="submit"] {
+  background-color: var(--cor-primaria);
+  color: white;
+  width: 100%;
+}
+button[type="submit"]:hover {
+  background-color: #0056b3;
+}
+
+.admin-list {
+  list-style-type: none;
+  padding: 0;
+  max-height: 400px;
+  overflow-y: auto;
+}
+.admin-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+}
+.admin-list li:last-child {
+  border-bottom: none;
+}
+.admin-list li span {
+  flex-grow: 1;
+}
+
+.edit-btn,
+.cancel-edit-btn {
+  background-color: var(--cor-secundaria);
+  color: white;
+  margin-right: 5px;
+}
+.edit-btn:hover,
+.cancel-edit-btn:hover {
+  background-color: #5a6268;
+}
+
+.delete-btn {
+  background-color: var(--cor-perigo);
+  color: white;
+}
+.delete-btn:hover {
+  background-color: #c82333;
+}
+
+.cancel-edit-btn {
+  background-color: #ffc107;
+  color: #333;
+  width: 100%;
+  margin-top: 10px;
+}
+.cancel-edit-btn:hover {
+  background-color: #e0a800;
+}
+
+@media (max-width: 768px) {
+  .admin-section {
+    flex-direction: column;
+  }
+}
