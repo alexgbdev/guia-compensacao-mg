@@ -75,6 +75,20 @@ app.get("/api/v2/modalidades", (req, res) =>
   )
 );
 
+// Buscar todas as normas associadas a um tipo de compensação específico
+app.get("/api/v2/normas-tipos-compensacao/:tipo_id", (req, res) => {
+  db.all(
+    "SELECT n.* FROM normas n JOIN normas_tipos_compensacao ntc ON n.id = ntc.norma_id WHERE ntc.tipo_id = ?",
+    [req.params.tipo_id],
+    (err, rows) => {
+      if (err) {
+        return res.status(400).json({ error: err.message });
+      }
+      res.json({ data: rows });
+    }
+  );
+});
+
 // ===============================================
 // === NOVAS ROTAS PARA CONSULTA AO IDE SISEMA ===
 // ===============================================
@@ -201,11 +215,11 @@ app.delete("/api/v2/normas/:id", (req, res) => {
 // --- TIPOS ---
 // Rota para criar um novo tipo de compensação
 app.post("/api/v2/tipos", (req, res) => {
-  const { nome, norma_ids } = req.body;
+  const { nome } = req.body;
 
   db.run(
-    "INSERT INTO tipos_compensacao (nome, norma_ids) VALUES (?, ?)",
-    [nome, norma_ids],
+    "INSERT INTO tipos_compensacao (nome) VALUES (?)",
+    [nome],
     function (err) {
       if (err) return res.status(400).json({ error: err.message });
       res.status(201).json({ id: this.lastID });
@@ -215,11 +229,11 @@ app.post("/api/v2/tipos", (req, res) => {
 
 // Rota para atualizar um tipo de compensação
 app.put("/api/v2/tipos/:id", (req, res) => {
-  const { nome, norma_ids } = req.body;
+  const { nome } = req.body;
 
   db.run(
-    "UPDATE tipos_compensacao SET nome = ?, norma_ids = ? WHERE id = ?",
-    [nome, norma_ids, req.params.id],
+    "UPDATE tipos_compensacao SET nome = ?, WHERE id = ?",
+    [nome, req.params.id],
     function (err) {
       if (err) return res.status(400).json({ error: err.message });
       res.status(200).json({ message: "Tipo atualizado com sucesso" });
