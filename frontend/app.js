@@ -35,7 +35,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       fetchData("modalidades"),
       fetchData("normas"),
     ]);
+
     tipoSelect.innerHTML = '<option value="">-- Selecione um Tipo --</option>';
+
     tipos.forEach((tipo) => {
       const option = document.createElement("option");
       option.value = tipo.id;
@@ -44,7 +46,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   };
 
-  const displayModalidades = (tipoId) => {
+  const displayModalidades = async (tipoId) => {
     detalhesDiv.style.display = "none";
     modalidadesList.innerHTML = "";
 
@@ -62,6 +64,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const li = document.createElement("li");
         li.textContent = modalidade.nome;
         li.dataset.id = modalidade.id;
+
         li.addEventListener("click", () => {
           document
             .querySelectorAll("#lista-modalidades li")
@@ -69,28 +72,23 @@ document.addEventListener("DOMContentLoaded", async () => {
           li.classList.add("active");
           displayDetalhes(modalidade.id);
         });
+
         modalidadesList.appendChild(li);
       });
     }
 
-    // ==========================================================================================
-    // ALTERAÇÃO 2: LÓGICA PARA EXIBIR NORMAS DO TIPO FOI ADICIONADA AQUI
-    // ==========================================================================================
-    // Se nenhum tipo for selecionado (ex: "-- Selecione --"), esconde as normas e para a função.
     if (!tipoId) {
       normasDiv.style.display = "none";
       return;
     }
 
     const tipo = tipos.find((t) => t.id == tipoId);
-    if (!tipo) return; // Segurança extra
+    if (!tipo) return;
 
-    const normasIds = tipo.norma_ids
-      ? tipo.norma_ids.split(",").map((id) => id.trim())
-      : [];
-    const normasRelacionadas = normas.filter((n) =>
-      normasIds.includes(n.id.toString())
+    const normasRelacionadas = await fetchData(
+      `normas-tipos-compensacao/${tipoId}`
     );
+
     const normasListUl = normasDiv.querySelector("ul");
     normasListUl.innerHTML = "";
 
@@ -108,9 +106,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     } else {
       normasDiv.style.display = "none";
     }
-    // ==========================================================================================
-    // FIM DA ALTERAÇÃO 2
-    // ==========================================================================================
   };
 
   const displayDetalhes = (modalidadeId) => {
@@ -119,6 +114,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!modalidade || !tipo) return;
 
     let detalhesHtml = `<h3>${modalidade.nome}</h3>`;
+
     const campos = {
       Proporção: modalidade.proporcao,
       Forma: modalidade.forma,
@@ -128,6 +124,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       "Documentos Necessários": modalidade.documentos,
       Observações: modalidade.observacao,
     };
+
     for (const [chave, valor] of Object.entries(campos)) {
       if (valor && valor.trim() !== "")
         detalhesHtml += `<strong>${chave}:</strong><p>${valor.replace(
@@ -135,35 +132,14 @@ document.addEventListener("DOMContentLoaded", async () => {
           "<br>"
         )}</p>`;
     }
+
     detalhesDiv.innerHTML = detalhesHtml;
     detalhesDiv.style.display = "block";
-
-    const normasIds = tipo.norma_ids
-      ? tipo.norma_ids.split(",").map((id) => id.trim())
-      : [];
-    const normasRelacionadas = normas.filter((n) =>
-      normasIds.includes(n.id.toString())
-    );
-    const normasListUl = normasDiv.querySelector("ul");
-    normasListUl.innerHTML = "";
-    if (normasRelacionadas.length > 0) {
-      normasRelacionadas.forEach((norma) => {
-        const li = document.createElement("li");
-        const a = document.createElement("a");
-        a.href = norma.link;
-        a.textContent = norma.nome;
-        a.target = "_blank";
-        li.appendChild(a);
-        normasListUl.appendChild(li);
-      });
-      normasDiv.style.display = "block";
-    } else {
-      normasDiv.style.display = "none";
-    }
 
     // Show button ONLY if SNUC and Pagamento are selected
     siscalBtnContainer.style.display = "none";
     siscalBtnContainer.innerHTML = "";
+
     if (
       tipo &&
       tipo.nome.trim().toUpperCase() === "SNUC" &&
