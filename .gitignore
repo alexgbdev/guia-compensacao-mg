@@ -122,3 +122,5 @@ dist
 .DS_Store
 server/app.yaml
 backend/database.sqlite
+backend/database.sqlite-shm
+backend/database.sqlite-wal
