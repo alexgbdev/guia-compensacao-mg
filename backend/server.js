@@ -1,27 +1,42 @@
-const express = require("express");
-const cors = require("cors");
-const path = require("path");
-const sqlite3 = require("sqlite3").verbose();
-const axios = require("axios");
+import express from "express";
+import cors from "cors";
+import path from "path";
+import axios from "axios";
+import { createClient } from "@libsql/client";
+import dotenv from "dotenv";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+dotenv.config();
 
 const app = express();
-const PORT = 3000;
 
-// --- Conexão com o Banco de Dados SQLite ---
-const db = new sqlite3.Database("./database.sqlite", (err) => {
-  if (err) {
-    console.error(
-      "ERRO GRAVE: Não foi possível conectar ao database.sqlite.",
-      err.message
-    );
-    // Opcional: Terminar o processo se não conseguir conectar ao DB
-    // process.exit(1);
-  }
-  console.log("Conectado ao banco de dados database.sqlite com sucesso.");
-});
+const isProduction = process.env.NODE_ENV === "production";
+
+const clientURL = isProduction
+  ? process.env.CLIENT_URL_PROD
+  : process.env.CLIENT_URL_DEV;
+
+const dbConfig = isProduction
+  ? {
+      url: process.env.DATABASE_URI_PROD,
+      authToken: process.env.TURSO_AUTH_TOKEN,
+    }
+  : {
+      url: process.env.DATABASE_URI_DEV,
+    };
+
+// --- Conexão com o Banco de Dados ---
+export const db = createClient(dbConfig);
 
 // --- Middlewares ---
-app.use(cors()); // Habilita o CORS para todas as requisições
+const corsOptions = {
+  origin: clientURL,
+  credentials: true,
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
+};
+
+app.use(cors(corsOptions));
 app.use(express.json()); // Habilita o parsing de JSON para requisições POST/PUT
 
 // Middleware para forçar o cabeçalho UTF-8 em todas as rotas da API.
@@ -35,7 +50,7 @@ app.use("/api", (req, res, next) => {
 // ===============================================
 
 // Rota para buscar normas com funcionalidade de busca (ex: /api/v2/normas?q=decreto)
-app.get("/api/v2/normas", (req, res) => {
+app.get("/api/v2/normas", async (req, res) => {
   const searchTerm = req.query.q;
   let sql = "SELECT * FROM normas";
   const params = [];
@@ -47,46 +62,47 @@ app.get("/api/v2/normas", (req, res) => {
     params.push(lowerSearchTerm, lowerSearchTerm, lowerSearchTerm);
   }
 
-  sql += " ORDER BY nome"; // Ordena os resultados pelo nome da norma
+  sql += " ORDER BY nome";
 
-  db.all(sql, params, (err, rows) => {
-    if (err) {
-      return res.status(400).json({ error: err.message });
-    }
-    res.json({ data: rows });
-  });
+  try {
+    const result = await db.execute(sql, params);
+    res.status(200).json({ data: result.rows });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 // Rota para buscar todos os tipos de compensação
-app.get("/api/v2/tipos", (req, res) =>
-  db.all("SELECT * FROM tipos_compensacao", [], (err, rows) =>
-    err
-      ? res.status(400).json({ error: err.message })
-      : res.json({ data: rows })
-  )
-);
+app.get("/api/v2/tipos", async (req, res) => {
+  try {
+    const result = await db.execute("SELECT * FROM tipos_compensacao");
+    res.status(200).json({ data: result.rows });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
 
 // Rota para buscar todas as modalidades de compensação
-app.get("/api/v2/modalidades", (req, res) =>
-  db.all("SELECT * FROM modalidades", [], (err, rows) =>
-    err
-      ? res.status(400).json({ error: err.message })
-      : res.json({ data: rows })
-  )
-);
+app.get("/api/v2/modalidades", async (req, res) => {
+  try {
+    const result = await db.execute("SELECT * FROM modalidades");
+    res.status(200).json({ data: result.rows });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
 
 // Buscar todas as normas associadas a um tipo de compensação específico
-app.get("/api/v2/normas-tipos-compensacao/:tipo_id", (req, res) => {
-  db.all(
-    "SELECT n.* FROM normas n JOIN normas_tipos_compensacao ntc ON n.id = ntc.norma_id WHERE ntc.tipo_id = ?",
-    [req.params.tipo_id],
-    (err, rows) => {
-      if (err) {
-        return res.status(400).json({ error: err.message });
-      }
-      res.json({ data: rows });
-    }
-  );
+app.get("/api/v2/normas-tipos-compensacao/:tipo_id", async (req, res) => {
+  try {
+    const result = await db.execute({
+      sql: "SELECT n.* FROM normas n JOIN normas_tipos_compensacao ntc ON n.id = ntc.norma_id WHERE ntc.tipo_id = ?",
+      args: [req.params.tipo_id],
+    });
+    res.status(200).json({ data: result.rows });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 // ===============================================
@@ -174,160 +190,174 @@ app.get("/api/v2/sisema/imoveis-compensacao", async (req, res) => {
 
 // --- NORMAS ---
 // Rota para criar uma nova norma
-app.post("/api/v2/normas", (req, res) => {
+app.post("/api/v2/normas", async (req, res) => {
   const { nome, link, preambulo } = req.body;
 
-  db.run(
-    "INSERT INTO normas (nome, link, preambulo) VALUES (?, ?, ?)",
-    [nome, link, preambulo],
-    function (err) {
-      if (err) return res.status(400).json({ error: err.message });
-      res.status(201).json({ id: this.lastID }); // Retorna o ID do novo registro
-    }
-  );
+  try {
+    const result = await db.execute({
+      sql: "INSERT INTO normas (nome, link, preambulo) VALUES (?, ?, ?)",
+      args: [nome, link, preambulo],
+    });
+    res.status(201).json({ message: "Norma criada com sucesso" });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 // Rota para atualizar uma norma existente
-app.put("/api/v2/normas/:id", (req, res) => {
+app.put("/api/v2/normas/:id", async (req, res) => {
   const { nome, link, preambulo } = req.body;
 
-  db.run(
-    "UPDATE normas SET nome = ?, link = ?, preambulo = ? WHERE id = ?",
-    [nome, link, preambulo, req.params.id],
-    function (err) {
-      if (err) return res.status(400).json({ error: err.message });
-      res.status(200).json({ message: "Norma atualizada com sucesso" });
-    }
-  );
+  try {
+    await db.execute({
+      sql: "UPDATE normas SET nome = ?, link = ?, preambulo = ? WHERE id = ?",
+      args: [nome, link, preambulo, req.params.id],
+    });
+    res.status(200).json({ message: "Norma atualizada com sucesso" });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 // Rota para deletar uma norma
-app.delete("/api/v2/normas/:id", (req, res) => {
-  db.run("DELETE FROM normas WHERE id = ?", req.params.id, function (err) {
-    if (err) return res.status(400).json({ error: err.message });
-
-    if (this.changes === 0)
-      return res.status(404).json({ message: "Norma não encontrada." }); // Se nenhuma linha foi afetada, a norma não existia
+app.delete("/api/v2/normas/:id", async (req, res) => {
+  try {
+    await db.execute({
+      sql: "DELETE FROM normas WHERE id = ?",
+      args: [req.params.id],
+    });
     res.status(200).json({ message: "Norma deletada com sucesso" });
-  });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 // --- TIPOS ---
 // Rota para criar um novo tipo de compensação
-app.post("/api/v2/tipos", (req, res) => {
+app.post("/api/v2/tipos", async (req, res) => {
   const { nome } = req.body;
 
-  db.run(
-    "INSERT INTO tipos_compensacao (nome) VALUES (?)",
-    [nome],
-    function (err) {
-      if (err) return res.status(400).json({ error: err.message });
-      res.status(201).json({ id: this.lastID });
-    }
-  );
+  try {
+    const result = await db.execute({
+      sql: "INSERT INTO tipos_compensacao (nome) VALUES (?)",
+      args: [nome],
+    });
+    res.status(201).json({ message: "Tipo de compensação criado com sucesso" });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 // Rota para atualizar um tipo de compensação
-app.put("/api/v2/tipos/:id", (req, res) => {
+app.put("/api/v2/tipos/:id", async (req, res) => {
   const { nome } = req.body;
 
-  db.run(
-    "UPDATE tipos_compensacao SET nome = ?, WHERE id = ?",
-    [nome, req.params.id],
-    function (err) {
-      if (err) return res.status(400).json({ error: err.message });
-      res.status(200).json({ message: "Tipo atualizado com sucesso" });
-    }
-  );
+  try {
+    await db.execute({
+      sql: "UPDATE tipos_compensacao SET nome = ? WHERE id = ?",
+      args: [nome, req.params.id],
+    });
+    res.status(200).json({ message: "Tipo atualizado com sucesso" });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 // Rota para deletar um tipo de compensação
-app.delete("/api/v2/tipos/:id", (req, res) => {
-  db.run(
-    "DELETE FROM tipos_compensacao WHERE id = ?",
-    req.params.id,
-    function (err) {
-      if (err) return res.status(400).json({ error: err.message });
-      if (this.changes === 0)
-        return res.status(404).json({ message: "Tipo não encontrado." });
-      res.status(200).json({ message: "Tipo deletado com sucesso" });
-    }
-  );
+app.delete("/api/v2/tipos/:id", async (req, res) => {
+  try {
+    await db.execute({
+      sql: "DELETE FROM tipos_compensacao WHERE id = ?",
+      args: [req.params.id],
+    });
+    res.status(200).json({ message: "Tipo deletado com sucesso" });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 // --- MODALIDADES ---
 // Rota para criar uma nova modalidade de compensação
-app.post("/api/v2/modalidades", (req, res) => {
+app.post("/api/v2/modalidades", async (req, res) => {
   const sql = `INSERT INTO modalidades (tipo_id, nome, proporcao, forma, especificidades, vantagens, desvantagens, observacao, documentos) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
   const p = req.body;
 
-  db.run(
-    sql,
-    [
-      p.tipo_id,
-      p.nome,
-      p.proporcao,
-      p.forma,
-      p.especificidades,
-      p.vantagens,
-      p.desvantagens,
-      p.observacao,
-      p.documentos,
-    ],
-    function (err) {
-      if (err) return res.status(400).json({ error: err.message });
-      res.status(201).json({ id: this.lastID });
-    }
-  );
+  try {
+    const result = await db.execute({
+      sql,
+      args: [
+        p.tipo_id,
+        p.nome,
+        p.proporcao,
+        p.forma,
+        p.especificidades,
+        p.vantagens,
+        p.desvantagens,
+        p.observacao,
+        p.documentos,
+      ],
+    });
+    res.status(201).json({ message: "Modalidade criada com sucesso" });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 // Rota para atualizar uma modalidade de compensação
-app.put("/api/v2/modalidades/:id", (req, res) => {
+app.put("/api/v2/modalidades/:id", async (req, res) => {
   const sql = `UPDATE modalidades SET tipo_id = ?, nome = ?, proporcao = ?, forma = ?, especificidades = ?, vantagens = ?, desvantagens = ?, observacao = ?, documentos = ? WHERE id = ?`;
   const p = req.body;
 
-  db.run(
-    sql,
-    [
-      p.tipo_id,
-      p.nome,
-      p.proporcao,
-      p.forma,
-      p.especificidades,
-      p.vantagens,
-      p.desvantagens,
-      p.observacao,
-      p.documentos,
-      req.params.id,
-    ],
-    function (err) {
-      if (err) return res.status(400).json({ error: err.message });
-      res.status(200).json({ message: "Modalidade atualizada com sucesso" });
-    }
-  );
+  try {
+    await db.execute({
+      sql,
+      args: [
+        p.tipo_id,
+        p.nome,
+        p.proporcao,
+        p.forma,
+        p.especificidades,
+        p.vantagens,
+        p.desvantagens,
+        p.observacao,
+        p.documentos,
+        req.params.id,
+      ],
+    });
+    res.status(200).json({ message: "Modalidade atualizada com sucesso" });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 // Rota para deletar uma modalidade de compensação
-app.delete("/api/v2/modalidades/:id", (req, res) => {
-  db.run("DELETE FROM modalidades WHERE id = ?", req.params.id, function (err) {
-    if (err) return res.status(400).json({ error: err.message });
-    if (this.changes === 0)
-      return res.status(404).json({ message: "Modalidade não encontrada." });
+app.delete("/api/v2/modalidades/:id", async (req, res) => {
+  try {
+    await db.execute({
+      sql: "DELETE FROM modalidades WHERE id = ?",
+      args: [req.params.id],
+    });
     res.status(200).json({ message: "Modalidade deletada com sucesso" });
-  });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 // --- Servindo os arquivos estáticos do Frontend ---
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 const frontendPath = path.join(__dirname, "..", "frontend");
 app.use(express.static(frontendPath));
 
 // --- Inicialização do Servidor ---
+const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
-  console.log(`Servindo arquivos do frontend da pasta: ${frontendPath}`);
+  console.log(`Servidor rodando em ${clientURL}`);
   console.log(`
 Acesse as novas rotas do IDE SISEMA para testar:
-- Unidades de Conservação: http://localhost:${PORT}/api/v2/sisema/unidades-conservacao
-- Imóveis de Compensação: http://localhost:${PORT}/api/v2/sisema/imoveis-compensacao
+- Unidades de Conservação: ${clientURL}/api/v2/sisema/unidades-conservacao
+- Imóveis de Compensação: ${clientURL}/api/v2/sisema/imoveis-compensacao
 `);
 });

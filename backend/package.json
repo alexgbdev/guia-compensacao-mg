@@ -11,11 +11,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@libsql/client": "^0.15.15",
     "axios": "^1.11.0",
     "cors": "^2.8.5",
     "csv-parser": "^3.2.0",
+    "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7"
-  }
+  },
+  "type": "module"
 }
