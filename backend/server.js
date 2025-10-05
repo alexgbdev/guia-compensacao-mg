@@ -242,7 +242,10 @@ app.post("/api/v2/tipos", async (req, res) => {
       sql: "INSERT INTO tipos_compensacao (nome) VALUES (?)",
       args: [nome],
     });
-    res.status(201).json({ message: "Tipo de compensação criado com sucesso" });
+    res.status(201).json({
+      message: "Tipo de compensação criado com sucesso",
+      id: Number(result.lastInsertRowid),
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -271,6 +274,22 @@ app.delete("/api/v2/tipos/:id", async (req, res) => {
       args: [req.params.id],
     });
     res.status(200).json({ message: "Tipo deletado com sucesso" });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// --- NORMAS-TIPOS COMPENSAÇÃO ---
+// Rota para associar normas a um tipo de compensação
+app.post("/api/v2/normas-tipos-compensacao", async (req, res) => {
+  const { tipo_id, norma_id } = req.body;
+
+  try {
+    await db.execute({
+      sql: "INSERT INTO normas_tipos_compensacao (tipo_id, norma_id) VALUES (?, ?)",
+      args: [tipo_id, norma_id],
+    });
+    res.status(201).json({ message: "Associação criada com sucesso" });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

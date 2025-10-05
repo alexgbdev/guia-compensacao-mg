@@ -1,8 +1,10 @@
 document.addEventListener("DOMContentLoaded", () => {
   const API_BASE_URL = "http://localhost:3000/api/v2";
+
   let allNormas = [],
     allTipos = [],
     allModalidades = [];
+
   let editState = { type: null, id: null };
 
   // Seletores de Formulários
@@ -15,23 +17,28 @@ document.addEventListener("DOMContentLoaded", () => {
   // Funções Genéricas da API
   const fetchData = async (endpoint) =>
     (await fetch(`${API_BASE_URL}/${endpoint}`)).json();
+
   const sendData = async (endpoint, data, id = null) => {
     const method = id ? "PUT" : "POST";
+
     const url = id
       ? `${API_BASE_URL}/${endpoint}/${id}`
       : `${API_BASE_URL}/${endpoint}`;
+
     return fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
   };
+
   const deleteData = async (endpoint, id) =>
     fetch(`${API_BASE_URL}/${endpoint}/${id}`, { method: "DELETE" });
 
   // Funções de Renderização
   const createButton = (className, text, type, id) =>
     `<button class="${className}" data-type="${type}" data-id="${id}">${text}</button>`;
+
   const renderNormas = () => {
     document.getElementById("normas-list").innerHTML =
       allNormas
@@ -45,6 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
             )}${createButton("delete-btn", "X", "normas", n.id)}</div></li>`
         )
         .join("") || "<li>Nenhuma norma cadastrada.</li>";
+
     document.getElementById("tipo-normas-checkboxes").innerHTML =
       "<label>Vincular Normas:</label>" +
       allNormas
@@ -54,6 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
         )
         .join("");
   };
+
   const renderTipos = () => {
     document.getElementById("tipos-list").innerHTML =
       allTipos
@@ -67,12 +76,14 @@ document.addEventListener("DOMContentLoaded", () => {
             )}${createButton("delete-btn", "X", "tipos", t.id)}</div></li>`
         )
         .join("") || "<li>Nenhum tipo cadastrado.</li>";
+
     document.getElementById("modalidade-tipo-select").innerHTML =
       '<option value="">-- Selecione o Tipo --</option>' +
       allTipos
         .map((t) => `<option value="${t.id}">${t.nome}</option>`)
         .join("");
   };
+
   const renderModalidades = () => {
     document.getElementById("modalidades-list").innerHTML =
       allModalidades
@@ -102,11 +113,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const populateFormForEdit = (type, id) => {
     const form = forms[type];
+
     const dataMap = {
       normas: allNormas,
       tipos: allTipos,
       modalidades: allModalidades,
     };
+
     const item = dataMap[type].find((i) => i.id == id);
     if (!item) return;
 
@@ -132,6 +145,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     for (const element of form.elements) {
       const dataKey = fieldMapping[element.id];
+
       if (dataKey) {
         element.value = item[dataKey] || "";
       }
@@ -139,6 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (type === "tipos") {
       const ids = (item.norma_ids || "").split(",");
+
       form
         .querySelectorAll("#tipo-normas-checkboxes input")
         .forEach((cb) => (cb.checked = ids.includes(cb.value)));
@@ -162,6 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
           fetchData("tipos"),
           fetchData("modalidades"),
         ]);
+
       renderNormas();
       renderTipos();
       renderModalidades();
@@ -176,21 +192,48 @@ document.addEventListener("DOMContentLoaded", () => {
     // CORREÇÃO: O endpoint deve ser plural
     const type = form.id.split("-")[0] + "s";
     let data;
+
     if (type === "normas")
       data = {
         nome: form.elements["norma-nome"].value,
         link: form.elements["norma-link"].value,
         preambulo: form.elements["norma-preambulo"].value,
       };
-    if (type === "tipos")
+
+    if (type === "tipos") {
       data = {
         nome: form.elements["tipo-nome"].value,
-        norma_ids: Array.from(
-          form.querySelectorAll("#tipo-normas-checkboxes input:checked")
-        )
-          .map((cb) => cb.value)
-          .join(","),
       };
+
+      const normasAssociadas = Array.from(
+        form.querySelectorAll("#tipo-normas-checkboxes input:checked")
+      ).map((checkbox) => Number(checkbox.value));
+
+      const response = await sendData(type, data, editState.id);
+
+      if (response.ok) {
+        const tipoId = editState.id || (await response.json()).id;
+
+        // Create associations with normas
+        await Promise.all(
+          normasAssociadas.map(async (normaId) => {
+            await sendData("normas-tipos-compensacao", {
+              tipo_id: tipoId,
+              norma_id: normaId,
+            });
+          })
+        );
+
+        alert(`Item ${editState.id ? "atualizado" : "salvo"} com sucesso!`);
+        resetForm(form);
+        carregarTudo();
+      } else {
+        alert("Erro ao salvar o item.");
+      }
+
+      return;
+    }
+
     if (type === "modalidades")
       data = {
         tipo_id: form.elements["modalidade-tipo-select"].value,
@@ -205,6 +248,7 @@ document.addEventListener("DOMContentLoaded", () => {
       };
 
     const response = await sendData(type, data, editState.id);
+
     if (response.ok) {
       alert(`Item ${editState.id ? "atualizado" : "salvo"} com sucesso!`);
       resetForm(form);
@@ -228,6 +272,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (button.classList.contains("edit-btn")) {
         populateFormForEdit(type, id);
       }
+
       if (
         button.classList.contains("delete-btn") &&
         confirm("Tem certeza que deseja deletar este item?")
@@ -235,6 +280,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const response = await deleteData(type, id);
         if (response.ok) {
           alert("Item deletado com sucesso!");
+
           if (editState.id == id) {
             const formType = editState.type;
             resetForm(forms[formType]);
