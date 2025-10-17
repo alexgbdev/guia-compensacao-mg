@@ -12,14 +12,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  const API_URL = "http://localhost:3000/api/v2";
+  const isProduction = window.env.NODE_ENV === "production";
+
+  const API_BASE_URL = isProduction
+    ? window.env.API_URL_PROD
+    : window.env.API_URL_DEV;
+
   let tipos = [],
     modalidades = [],
     normas = [];
 
   const fetchData = async (endpoint) => {
     try {
-      const response = await fetch(`${API_URL}/${endpoint}`);
+      const response = await fetch(`${API_BASE_URL}/${endpoint}`);
       if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
       return (await response.json()).data;
     } catch (error) {
@@ -85,9 +90,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const tipo = tipos.find((t) => t.id == tipoId);
     if (!tipo) return;
 
-    const normasRelacionadas = await fetchData(
-      `normas-tipos-compensacao/${tipoId}`
-    );
+    const normasRelacionadas = await fetchData(`tipos/${tipoId}/normas`);
 
     const normasListUl = normasDiv.querySelector("ul");
     normasListUl.innerHTML = "";

@@ -92,16 +92,16 @@ app.get("/api/v2/modalidades", async (req, res) => {
   }
 });
 
-// Buscar todas as normas associadas a um tipo de compensação específico
-app.get("/api/v2/normas-tipos-compensacao/:tipo_id", async (req, res) => {
+// Rota para obter as normas associadas a um tipo de compensação
+app.get("/api/v2/tipos/:id/normas", async (req, res) => {
   try {
     const result = await db.execute({
       sql: "SELECT n.* FROM normas n JOIN normas_tipos_compensacao ntc ON n.id = ntc.norma_id WHERE ntc.tipo_id = ?",
-      args: [req.params.tipo_id],
+      args: [req.params.id],
     });
     res.status(200).json({ data: result.rows });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 });
 
@@ -368,6 +368,16 @@ const __dirname = dirname(__filename);
 
 const frontendPath = path.join(__dirname, "..", "frontend");
 app.use(express.static(frontendPath));
+
+app.get("/env.js", (req, res) => {
+  res.setHeader("Content-Type", "application/javascript");
+  res.send(
+    `window.env = ${JSON.stringify({
+      API_URL_DEV: process.env.API_URL_DEV,
+      API_URL_PROD: process.env.API_URL_PROD,
+    })};`
+  );
+});
 
 // --- Inicialização do Servidor ---
 const PORT = process.env.PORT || 3000;
