@@ -369,6 +369,7 @@ const __dirname = dirname(__filename);
 const frontendPath = path.join(__dirname, "..", "frontend");
 app.use(express.static(frontendPath));
 
+// Serve a small JS file that defines window.env so the frontend can load runtime env before other scripts
 app.get("/env.js", (req, res) => {
   res.setHeader("Content-Type", "application/javascript");
   res.send(

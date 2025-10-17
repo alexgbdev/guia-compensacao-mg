@@ -42,6 +42,18 @@
         </div>
       </div>
     </div>
+    <!-- Inline fallback: ensures window.env exists even if /env.js didn't load -->
+    <script>
+      if (typeof window !== 'undefined' && !window.env) {
+        window.env = {
+          NODE_ENV: 'development',
+          API_URL_DEV: '/api/v2',
+          API_URL_PROD: '/api/v2'
+        };
+      }
+    </script>
+    <!-- Load runtime env (overwrites fallback when available) -->
+    <script src="/env.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
