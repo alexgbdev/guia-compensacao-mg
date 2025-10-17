@@ -373,6 +373,7 @@ app.get("/env.js", (req, res) => {
   res.setHeader("Content-Type", "application/javascript");
   res.send(
     `window.env = ${JSON.stringify({
+      NODE_ENV: process.env.NODE_ENV,
       API_URL_DEV: process.env.API_URL_DEV,
       API_URL_PROD: process.env.API_URL_PROD,
     })};`
